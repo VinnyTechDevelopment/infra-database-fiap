@@ -2,6 +2,21 @@
 
 Provisiona o RDS MySQL (banco gerenciado) usado pela aplicação Laravel, dentro da mesma VPC criada pelo repositório `infra-kubernetes`.
 
+## Arquitetura
+
+```mermaid
+flowchart LR
+    subgraph VPC["VPC (de infra-kubernetes)"]
+        SG["security group rds\ningress 3306 de todo o CIDR da VPC"]
+        RDS[("aws_db_instance\nMySQL 8.0")]
+        SG --- RDS
+        EKS["Pods do Laravel (EKS)"] -->|3306| SG
+        Lambda["lambda-auth-cpf"] -->|3306| SG
+        Migrate["Job de migration"] -->|3306| SG
+    end
+    IK["infra-kubernetes"] -.->|"vpc_id / private_subnet_ids\nvia terraform_remote_state"| VPC
+```
+
 ## O que este repositório cria
 
 - `aws_db_subnet_group` e um security group liberando a porta 3306 para toda a VPC (pods do EKS e a Lambda de autenticação).
